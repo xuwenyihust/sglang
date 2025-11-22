@@ -556,10 +556,6 @@ impl ResponseStorage for PostgresResponseStorage {
         &self,
         response: StoredResponse,
     ) -> Result<ResponseId, ResponseStorageError> {
-        tracing::info!(
-            response_id = %response.id.0,
-            "Attempting to store response in PostgreSQL."
-        );
         let response_id = response.id.clone();
         let response_id_str = response_id.0.clone();
         let previous_id = response.previous_response_id.map(|r| r.0);
@@ -593,11 +589,6 @@ impl ResponseStorage for PostgresResponseStorage {
                 &json_raw_response,
             ]).await.unwrap();
         println!("INSERT INTO responses VALUES {insert_count}");
-        tracing::info!(
-            response_id = %response_id.0,
-            rows_inserted = insert_count,
-            "Successfully executed INSERT statement for response."
-        );
         Ok(response_id)
     }
 

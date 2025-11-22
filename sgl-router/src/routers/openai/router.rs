@@ -20,7 +20,7 @@ use once_cell::sync::Lazy;
 use serde_json::{json, to_value, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use tracing::{info, warn};
+use tracing::warn;
 
 // Import from sibling modules
 use super::conversations::{
@@ -264,8 +264,6 @@ impl OpenAIRouter {
 
         let mut response_json: Value;
 
-        info!(">>> handle_non_streaming_response");
-
         // If MCP is active, execute tool loop
         if let Some(mcp) = active_mcp {
             let config = McpLoopConfig::default();
@@ -296,7 +294,6 @@ impl OpenAIRouter {
             }
         } else {
             // No MCP - simple request
-            info!(">>> No MCP - simple request");
 
             let mut request_builder = self.client.post(&url).json(&payload);
             if let Some(h) = headers {
@@ -351,9 +348,7 @@ impl OpenAIRouter {
             original_previous_response_id.as_deref(),
         );
 
-        // Always persist conversation items and response (even without conversation)
-        info!(">>> Persisting conversation items");
-        
+        // Always persist conversation items and response (even without conversation)        
         if let Err(err) = persist_conversation_items(
             self.conversation_storage.clone(),
             self.conversation_item_storage.clone(),
@@ -551,7 +546,6 @@ impl crate::routers::RouterTrait for OpenAIRouter {
         body: &ChatCompletionRequest,
         _model_id: Option<&str>,
     ) -> Response {
-        info!(">>> route_chat");
         if !self.circuit_breaker.can_execute() {
             return (StatusCode::SERVICE_UNAVAILABLE, "Circuit breaker open").into_response();
         }
@@ -689,8 +683,6 @@ impl crate::routers::RouterTrait for OpenAIRouter {
         body: &ResponsesRequest,
         model_id: Option<&str>,
     ) -> Response {
-        info!(">>> route_responses");
-
         // Extract auth header
         let auth = extract_auth_header(headers);
 
