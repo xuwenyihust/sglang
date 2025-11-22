@@ -348,7 +348,7 @@ impl OpenAIRouter {
             original_previous_response_id.as_deref(),
         );
 
-        // Always persist conversation items and response (even without conversation)        
+        // Always persist conversation items and response (even without conversation)
         if let Err(err) = persist_conversation_items(
             self.conversation_storage.clone(),
             self.conversation_item_storage.clone(),
