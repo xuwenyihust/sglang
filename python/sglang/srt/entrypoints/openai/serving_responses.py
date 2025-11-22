@@ -501,6 +501,7 @@ class OpenAIServingResponses(OpenAIServingChat):
             )
         request_metadata.final_usage_info = usage
 
+        logger.info(f"request: {request}")
         response = ResponsesResponse.from_request(
             request,
             sampling_params,
@@ -510,6 +511,9 @@ class OpenAIServingResponses(OpenAIServingChat):
             status="completed",
             usage=usage,
         )
+
+        logger.info(f"response: {response}")
+        logger.info(f"response.store: {response.store}")
 
         if request.store:
             async with self.response_store_lock:
