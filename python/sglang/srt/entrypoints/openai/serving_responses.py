@@ -513,11 +513,11 @@ class OpenAIServingResponses(OpenAIServingChat):
         )
 
         logger.info(f"response: {response}")
-        logger.info(f"response.store: {response.store}")
 
         if request.store:
             async with self.response_store_lock:
                 stored_response = self.response_store.get(response.id)
+                logger.info(f"stored_response: {stored_response}")
                 # If the response is already cancelled, don't update it
                 if stored_response is None or stored_response.status != "cancelled":
                     self.response_store[response.id] = response
