@@ -1047,10 +1047,6 @@ async fn persist_items_with_storages(
     response_json: &Value,
     original_body: &ResponsesRequest,
 ) -> Result<(), String> {
-    tracing::info!(
-        ">>> response_json: {}",
-        serde_json::to_string_pretty(response_json).unwrap_or_else(|e| e.to_string())
-    );
     info!(">>> Calling persist_items_with_storages");
     // Step 1: Extract response ID
     let response_id_str = response_json

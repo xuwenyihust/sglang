@@ -264,6 +264,8 @@ impl OpenAIRouter {
 
         let mut response_json: Value;
 
+        info!(">>> handle_non_streaming_response");
+
         // If MCP is active, execute tool loop
         if let Some(mcp) = active_mcp {
             let config = McpLoopConfig::default();
@@ -294,6 +296,7 @@ impl OpenAIRouter {
             }
         } else {
             // No MCP - simple request
+            info!(">>> No MCP - simple request");
 
             let mut request_builder = self.client.post(&url).json(&payload);
             if let Some(h) = headers {
