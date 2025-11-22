@@ -98,7 +98,7 @@ pub fn create_storage(config: &RouterConfig) -> Result<StorageTuple, String> {
 
             let storages = create_postgres_storage(&postgres_cfg)?;
 
-            info!("Data connector initialized successfully: Postgres");
+            info!("Data connector initialized successfully: Postgres 666");
 
             Ok(storages)
         }
