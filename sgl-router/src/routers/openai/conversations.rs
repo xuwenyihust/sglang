@@ -1047,6 +1047,7 @@ async fn persist_items_with_storages(
     response_json: &Value,
     original_body: &ResponsesRequest,
 ) -> Result<(), String> {
+    info!(">>> Calling persist_items_with_storages");
     // Step 1: Extract response ID
     let response_id_str = response_json
         .get("id")

@@ -20,7 +20,7 @@ use once_cell::sync::Lazy;
 use serde_json::{json, to_value, Value};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use tracing::warn;
+use tracing::{info, warn};
 
 // Import from sibling modules
 use super::conversations::{
@@ -349,6 +349,8 @@ impl OpenAIRouter {
         );
 
         // Always persist conversation items and response (even without conversation)
+        info!(">>> Persisting conversation items");
+        
         if let Err(err) = persist_conversation_items(
             self.conversation_storage.clone(),
             self.conversation_item_storage.clone(),
