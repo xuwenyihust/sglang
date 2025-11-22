@@ -551,6 +551,7 @@ impl crate::routers::RouterTrait for OpenAIRouter {
         body: &ChatCompletionRequest,
         _model_id: Option<&str>,
     ) -> Response {
+        info!(">>> route_chat");
         if !self.circuit_breaker.can_execute() {
             return (StatusCode::SERVICE_UNAVAILABLE, "Circuit breaker open").into_response();
         }
@@ -688,6 +689,8 @@ impl crate::routers::RouterTrait for OpenAIRouter {
         body: &ResponsesRequest,
         model_id: Option<&str>,
     ) -> Response {
+        info!(">>> route_responses");
+
         // Extract auth header
         let auth = extract_auth_header(headers);
 
