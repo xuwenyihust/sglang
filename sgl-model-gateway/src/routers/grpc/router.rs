@@ -233,6 +233,10 @@ impl GrpcRouter {
                 }
             }
         } else {
+            debug!(
+                "Processing Non-Harmony responses request for model: {:?}, streaming: {:?}",
+                model_id, body.stream
+            );
             responses::route_responses(
                 &self.responses_context,
                 Arc::new(body.clone()),
