@@ -31,6 +31,9 @@ pub async fn ensure_mcp_connection(
     mcp_manager: &Arc<McpManager>,
     tools: Option<&[ResponseTool]>,
 ) -> Result<bool, Response> {
+    debug!("Ensuring MCP connection");
+    debug!("tools: {:?}", tools);
+
     let has_mcp_tools = tools
         .map(|t| {
             t.iter()
@@ -38,22 +41,22 @@ pub async fn ensure_mcp_connection(
         })
         .unwrap_or(false);
 
-    if has_mcp_tools {
-        if let Some(tools) = tools {
-            if ensure_request_mcp_client(mcp_manager, tools)
-                .await
-                .is_none()
-            {
-                error!(
-                    function = "ensure_mcp_connection",
-                    "Failed to connect to MCP server"
-                );
-                return Err(error::failed_dependency(
-                    "Failed to connect to MCP server. Check server_url and authorization.",
-                ));
-            }
-        }
-    }
+    // if has_mcp_tools {
+    //     if let Some(tools) = tools {
+    //         if ensure_request_mcp_client(mcp_manager, tools)
+    //             .await
+    //             .is_none()
+    //         {
+    //             error!(
+    //                 function = "ensure_mcp_connection",
+    //                 "Failed to connect to MCP server"
+    //             );
+    //             return Err(error::failed_dependency(
+    //                 "Failed to connect to MCP server. Check server_url and authorization.",
+    //             ));
+    //         }
+    //     }
+    // }
 
     Ok(has_mcp_tools)
 }
