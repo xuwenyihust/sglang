@@ -130,6 +130,7 @@ async fn route_responses_sync(
     model_id: Option<String>,
     response_id: Option<String>,
 ) -> Response {
+    debug!("Calling route_responses_sync");
     match route_responses_internal(ctx, request, headers, model_id, response_id).await {
         Ok(responses_response) => axum::Json(responses_response).into_response(),
         Err(response) => response, // Already a Response with proper status code
@@ -144,11 +145,13 @@ async fn route_responses_internal(
     model_id: Option<String>,
     response_id: Option<String>,
 ) -> Result<ResponsesResponse, Response> {
+    debug!("Calling route_responses_internal");
     // 1. Load conversation history and build modified request
     let modified_request = load_conversation_history(ctx, &request).await?;
 
     // 2. Check MCP connection and get whether MCP tools are present
     let has_mcp_tools = ensure_mcp_connection(&ctx.mcp_manager, request.tools.as_deref()).await?;
+    debug!("has_mcp_tools: {}", has_mcp_tools);
 
     let responses_response = if has_mcp_tools {
         debug!("MCP tools detected, using tool loop");
@@ -164,6 +167,7 @@ async fn route_responses_internal(
         )
         .await?
     } else {
+        debug!("No MCP tools detected, executing without tool loop");
         // No MCP tools - execute without MCP (may have function tools or no tools)
         execute_without_mcp(
             ctx,
