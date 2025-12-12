@@ -3,6 +3,7 @@
 //! Supports both JSON strings and parsed Maps with automatic type coercion.
 
 use serde_json::Map;
+use tracing::debug;
 
 /// Tool arguments input - supports both JSON strings and parsed Maps
 pub enum ToolArgs {
@@ -25,10 +26,25 @@ impl ToolArgs {
                 }
                 let mut value: serde_json::Value =
                     serde_json::from_str(&s).map_err(|e| format!("parse tool args: {}", e))?;
+
+                let type_name = match &value {
+                    serde_json::Value::Null => "Null",
+                    serde_json::Value::Bool(_) => "Bool",
+                    serde_json::Value::Number(_) => "Number",
+                    serde_json::Value::String(_) => "String (CRITICAL: Double Encoded!)",
+                    serde_json::Value::Array(_) => "Array",
+                    serde_json::Value::Object(_) => "Object (Correct)",
+                };
+                debug!("DEBUG: ToolArgs parsed string into: {:?}", value);
+                debug!("DEBUG: Parsed JSON Type is: [{}]", type_name);
+
                 Self::coerce_types(&mut value, tool_schema)?;
                 let result = match value {
                     serde_json::Value::Object(m) => Some(m),
-                    _ => None,
+                    bad_value => {
+                        debug!("DEBUG: CRITICAL! ToolArgs is silently swallowing arguments because they are not a Map! Got: {:?}", bad_value);
+                        None
+                    },
                 };
                 Ok(result)
             }
