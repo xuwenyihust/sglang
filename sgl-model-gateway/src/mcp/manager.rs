@@ -194,7 +194,7 @@ impl McpManager {
             .await
             .ok_or_else(|| McpError::ServerNotFound(server_name.clone()))?;
 
-        tokio::time::sleep(Duration::from_millis(300)).await;
+        tokio::time::sleep(Duration::from_millis(8000)).await;
 
         // Call the tool
         let request = CallToolRequestParam {
