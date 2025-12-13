@@ -194,6 +194,11 @@ impl McpConnectionPool {
             .collect()
     }
 
+    /// Remove a connection from the pool by server key
+    pub fn remove(&self, server_key: &str) -> Option<CachedConnection> {
+        self.connections.lock().pop(server_key)
+    }
+
     /// Get a connection by server key without creating it
     /// Promotes the entry in LRU cache if found
     pub fn get(&self, server_key: &str) -> Option<Arc<McpClient>> {
