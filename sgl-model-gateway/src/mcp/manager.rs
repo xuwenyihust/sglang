@@ -104,8 +104,13 @@ impl McpManager {
 
     pub async fn get_client(&self, server_name: &str) -> Option<Arc<McpClient>> {
         if let Some(client) = self.static_clients.get(server_name) {
+            debug!("Using static MCP client for server: '{}'", server_name);
             return Some(Arc::clone(client.value()));
         }
+        debug!(
+            "Using dynamic MCP client from connection pool for server: '{}'",
+            server_name
+        );
         self.connection_pool.get(server_name)
     }
 
@@ -188,6 +193,8 @@ impl McpManager {
             .get_client(&server_name)
             .await
             .ok_or_else(|| McpError::ServerNotFound(server_name.clone()))?;
+
+        tokio::time::sleep(Duration::from_millis(300)).await;
 
         // Call the tool
         let request = CallToolRequestParam {
