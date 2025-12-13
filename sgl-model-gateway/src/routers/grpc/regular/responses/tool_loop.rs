@@ -369,6 +369,14 @@ pub(super) async fn execute_tool_loop(
                     tool_name, call_id, args_json_str
                 );
 
+                // Pretty print for debugging
+                if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(&args_json_str) {
+                    debug!(
+                        "MCP tool call arguments (parsed for pretty printing):\n{}",
+                        serde_json::to_string_pretty(&json_val).unwrap_or_else(|_| "{}".to_string())
+                    );
+                }
+
                 let (output_str, success, error) = match ctx
                     .mcp_manager
                     .call_tool(tool_name.as_str(), args_json_str.as_str())
