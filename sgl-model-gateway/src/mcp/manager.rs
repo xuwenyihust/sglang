@@ -189,16 +189,38 @@ impl McpManager {
             .await
             .ok_or_else(|| McpError::ServerNotFound(server_name.clone()))?;
 
-        // Call the tool
-        let request = CallToolRequestParam {
-            name: Cow::Owned(tool_name.to_string()),
-            arguments: args_map,
-        };
+        // Call the tool with retry for initialization errors
+        const MAX_ATTEMPTS: usize = 3;
+        let mut attempts = 0;
+        loop {
+            attempts += 1;
+            // The request must be cloned inside the loop for retries.
+            let request = CallToolRequestParam {
+                name: Cow::Owned(tool_name.to_string()),
+                arguments: args_map.clone(),
+            };
 
-        client
-            .call_tool(request)
-            .await
-            .map_err(|e| McpError::ToolExecution(format!("Failed to call tool: {}", e)))
+            match client.call_tool(request).await {
+                Ok(result) => return Ok(result),
+                Err(e) => {
+                    // JSON-RPC error code for "Invalid params" is -32602
+                    // This can happen if the server is not fully initialized.
+                    let error_string = e.to_string();
+                    if error_string.contains("-32602") && attempts < MAX_ATTEMPTS {
+                        warn!(
+                            "Got 'Invalid params' error on tool '{}' (attempt {}/{}). Retrying in 1s...",
+                            tool_name, attempts, MAX_ATTEMPTS
+                        );
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+                        continue;
+                    }
+                    return Err(McpError::ToolExecution(format!(
+                        "Failed to call tool '{}' after {} attempts: {}",
+                        tool_name, attempts, e
+                    )));
+                }
+            }
+        }
     }
 
     /// Get a tool by name
