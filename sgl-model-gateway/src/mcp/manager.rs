@@ -188,37 +188,45 @@ impl McpManager {
             .into_map(tool_schema.as_ref())
             .map_err(McpError::InvalidArguments)?;
 
-        // Get client for that server
-        let client = self
-            .get_client(&server_name)
-            .await
-            .ok_or_else(|| McpError::ServerNotFound(server_name.clone()))?;
+        let max_retries = 1;
+        for attempt in 0..=max_retries {
+            // Get client for that server
+            let client = self
+                .get_client(&server_name)
+                .await
+                .ok_or_else(|| McpError::ServerNotFound(server_name.clone()))?;
 
-        // Call the tool
-        let request = CallToolRequestParam {
-            name: Cow::Owned(tool_name.to_string()),
-            arguments: args_map,
-        };
+            // Call the tool
+            let request = CallToolRequestParam {
+                name: Cow::Owned(tool_name.to_string()),
+                arguments: args_map.clone(),
+            };
 
-        let result = client.call_tool(request).await;
+            let result = client.call_tool(request).await;
 
-        if let Err(e) = &result {
-            let error_string = e.to_string();
-            if error_string.contains("-32602") {
-                warn!(
-                    "MCP tool call to server '{}' failed with error code -32602. Removing potentially stale client to force reconnect on next call.",
-                    server_name
-                );
-                // The client could be static or dynamic.
-                if self.static_clients.contains_key(&server_name) {
-                    self.static_clients.remove(&server_name);
-                } else {
-                    self.connection_pool.remove(&server_name);
+            if let Err(e) = &result {
+                let error_string = e.to_string();
+                if error_string.contains("-32602") && attempt < max_retries {
+                    warn!(
+                        "MCP tool call to server '{}' failed with error code -32602 (attempt {}/{}). Removing client and retrying.",
+                        server_name,
+                        attempt + 1,
+                        max_retries + 1
+                    );
+                    // The client could be static or dynamic.
+                    if self.static_clients.contains_key(&server_name) {
+                        self.static_clients.remove(&server_name);
+                    } else {
+                        self.connection_pool.remove(&server_name);
+                    }
+                    continue;
                 }
             }
+
+            return result.map_err(|e| McpError::ToolExecution(format!("Failed to call tool: {}", e)));
         }
 
-        result.map_err(|e| McpError::ToolExecution(format!("Failed to call tool: {}", e)))
+        unreachable!();
     }
 
     /// Get a tool by name
