@@ -200,10 +200,25 @@ impl McpManager {
             arguments: args_map,
         };
 
-        client
-            .call_tool(request)
-            .await
-            .map_err(|e| McpError::ToolExecution(format!("Failed to call tool: {}", e)))
+        let result = client.call_tool(request).await;
+
+        if let Err(e) = &result {
+            let error_string = e.to_string();
+            if error_string.contains("-32602") {
+                warn!(
+                    "MCP tool call to server '{}' failed with error code -32602. Removing potentially stale client to force reconnect on next call.",
+                    server_name
+                );
+                // The client could be static or dynamic.
+                if self.static_clients.contains_key(&server_name) {
+                    self.static_clients.remove(&server_name);
+                } else {
+                    self.connection_pool.remove(&server_name);
+                }
+            }
+        }
+
+        result.map_err(|e| McpError::ToolExecution(format!("Failed to call tool: {}", e)))
     }
 
     /// Get a tool by name
